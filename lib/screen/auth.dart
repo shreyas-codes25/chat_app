@@ -9,6 +9,18 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   var _isLogin = true;
+  final _from = GlobalKey<FormState>();
+  var _entryEmail = "";
+  var _entryPassword = "";
+
+  void _submit() {
+    final isValid = _from.currentState!.validate();
+
+    if (isValid) {
+      _from.currentState!.save();
+      print("Email: $_entryEmail, Password: $_entryPassword");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +43,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Form(
+                      key: _from,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -40,17 +53,39 @@ class _AuthScreenState extends State<AuthScreen> {
                             keyboardType: TextInputType.emailAddress,
                             autocorrect: false,
                             textCapitalization: TextCapitalization.none,
+                            validator: (value) {
+                              if (value == null ||
+                                  value.trim().isEmpty ||
+                                  !value.contains("@")) {
+                                return "Please enter a valid email";
+                              }
+                              return null;
+                            },
+                            onSaved: (value) {
+                              _entryEmail = value!;
+                            },
                           ),
                           TextFormField(
                             decoration: const InputDecoration(
                                 labelText: "Password",
                                 suffixIcon: Icon(Icons.remove_red_eye)),
                             obscureText: true,
+                            validator: (value) {
+                              if (value == null ||
+                                  value.trim().isEmpty ||
+                                  value.length < 6) {
+                                return "password must be 6 characters long";
+                              }
+                              return null;
+                            },
+                            onSaved: (value) {
+                              _entryPassword = value!;
+                            },
                           ),
                           const SizedBox(height: 12),
                           ElevatedButton.icon(
                             icon: const Icon(Icons.login),
-                            onPressed: () {},
+                            onPressed: _submit,
                             label: Text(_isLogin ? "Login" : "sign up"),
                           ),
                           ElevatedButton.icon(
