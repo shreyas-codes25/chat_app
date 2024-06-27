@@ -15,6 +15,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _from = GlobalKey<FormState>();
   var _entryEmail = "";
   var _entryPassword = "";
+  bool _isVisible = true;
 
   Future<void> _submit() async {
     final isValid = _from.currentState!.validate();
@@ -30,20 +31,18 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _entryEmail,
           password: _entryPassword,
         );
-        print(_userCredentials);
       } else {
         final _userCredentials = await _firebase.createUserWithEmailAndPassword(
           email: _entryEmail,
           password: _entryPassword,
         );
-        print(_userCredentials);
       }
     } on FirebaseAuthException catch (error) {
       if (error.code == "email-already-in-use") {}
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error.message?? "Authentication failed"),
+          content: Text(error.message ?? "Authentication failed"),
         ),
       );
     }
@@ -93,10 +92,18 @@ class _AuthScreenState extends State<AuthScreen> {
                             },
                           ),
                           TextFormField(
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                                 labelText: "Password",
-                                suffixIcon: Icon(Icons.remove_red_eye)),
-                            obscureText: true,
+                                suffixIcon: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _isVisible = !_isVisible;
+                                      });
+                                    },
+                                    icon: Icon(_isVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off))),
+                            obscureText: _isVisible,
                             validator: (value) {
                               if (value == null ||
                                   value.trim().isEmpty ||
