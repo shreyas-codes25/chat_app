@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,6 +26,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isVisible = true;
   File? _selectedImage;
   bool _isAuthenticating = false;
+  var _entryUsername = '';
 
   Future<void> _submit() async {
     final isValid = _from.currentState!.validate();
@@ -67,7 +69,14 @@ class _AuthScreenState extends State<AuthScreen> {
             .child("${userCredentials.user!.uid}.jpg");
         await storageRef.putFile(_selectedImage!);
         final imageUrl = await storageRef.getDownloadURL();
-        print(imageUrl);
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(userCredentials.user!.uid)
+            .set({
+          "username": _entryUsername,
+          "email": _entryEmail,
+          "image_url": imageUrl,
+        });
       }
     } on FirebaseAuthException catch (error) {
       if (error.code == "email-already-in-use") {}
@@ -114,6 +123,24 @@ class _AuthScreenState extends State<AuthScreen> {
                             UserImagePicker(
                               onPickedImage: (image) {
                                 _selectedImage = image;
+                              },
+                            ),
+                          if (!_isLogin)
+                            TextFormField(
+                              decoration: const InputDecoration(
+                                labelText: "username",
+                              ),
+                              onSaved: (value) {
+                                _entryUsername = value!;
+                              },
+                              enableSuggestions: false,
+                              validator: (value) {
+                                if (value == null ||
+                                    value.isEmpty ||
+                                    value.trim().length < 4) {
+                                  return "Please enter at least 4 characters";
+                                }
+                                return null;
                               },
                             ),
                           TextFormField(
